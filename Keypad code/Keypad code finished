@@ -1,16 +1,13 @@
 #include <Keypad.h>
-
-const byte ROWS = 5; //5 rows
-const byte COLS = 4; //4 columns
+const byte ROWS = 5; 
+const byte COLS = 4; 
 char* specialKeys[] ={
             "F1",  "F2", "#", "*",
             "1",  "2", "3", "UP",
             "4",  "5", "6", "DOWN",
             "7",  "8", "9", "ESC",
             "LEFT",  "0", "RIGHT", "ENTER"  
-                    };
-
-                    
+                    };                   
 char specialKeysID[] = {
         'A',  'B', '#', '*',
         '1',  '2', '3', 'C',
@@ -28,8 +25,8 @@ char keys[ROWS][COLS] = {
 };
 
 
-byte rowPins[ROWS] = {2,3,4,5,6}; //connect to the row pinouts of the kpd
-byte colPins[COLS] = {10,9,8,7}; //connect to the column pinouts of the kpd
+byte rowPins[ROWS] = {2,3,4,5,6}; 
+byte colPins[COLS] = {10,9,8,11}; 
 
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
@@ -39,16 +36,14 @@ String msg;
 
 
 void setup() {
-  // Robojax 5x4 keypad test
+
   Serial.begin(9600);
   Serial.println("Robojax 5x4 keypad");
 }
 
 
 void loop() {
-  // Robojax 5x4 keypad test
   char key = keypad.getKey();
-    // just print the pressed key
     
    if (key){
     Serial.print("Key: ");
@@ -58,25 +53,13 @@ void loop() {
   {
      Serial.println("ENTER is pressed");   
   }
-  
-//Robojax.com 5x4 keypad detecting string value
-}  // End loop
+}  
 
 
-/*
- * getKey()
- * @brief gets the actual key value from single character 
- * @param k is character
- * @return returns acualt key value
- * Written by Ahmad Shamshiri for robojax.com
- * on May 06, 2020 at 19:37 in Ajax, Ontario, Canada
- */
 char* getKey(char *k)
 {
- //Robojax.com 5x4 keypad detecting string value
   for(int i=0; i<20; i++)
   {
     if(specialKeysID[i] ==k) return specialKeys[i];
   }
- 
-}//getKey
+}
