@@ -1,61 +1,58 @@
+/* Get all possible data from MPU6050
+ * Accelerometer values are given as multiple of the gravity [1g = 9.81 m/s²]
+ * Gyro values are given in deg/s
+ * Angles are given in degrees
+ * Note that X and Y are tilt angles and not pitch/roll.
+ *
+ * License: MIT
+ */
+
 #include "Wire.h"
 #include <MPU6050_light.h>
 
-MPU6050 mpu(Wire);
-MPU6050 mpu1(Wire);
+MPU6050 mpuA(Wire);
+MPU6050 mpuB(Wire); 
+
 long timer = 0;
-float razlika = 0;
-float X = 0;
-float X1 = 0;
 
 void setup() {
   Serial.begin(9600);
   Wire.begin();
   
-  byte status = mpu.begin();
-  byte status1 = mpu1.begin();
-  Serial.print(F("MPU6050 status: "));
-  Serial.println(status);
-  Serial.print(F("MPU60501 status: "));
-  Serial.println(status1);
-  while(status!=0){ } // stop everything if could not connect to MPU6050
-  while(status1!=0){ }
-  
-  Serial.println(F("Calculating offsets, do not move MPU6050"));
-  delay(1000);
-  mpu.calcOffsets(true,true); // gyro and accelero
-  mpu1.calcOffsets(true,true);
-  Serial.println("Done!\n");
+  mpuA.setAddress(0x68);
+    mpuA.begin();
+    Serial.println(F("Calculating gyro offset, do not move MPU6050"));
+    delay(1000);
+    mpuA.calcGyroOffsets();
+    Serial.println("Done.");
+  mpuB.begin();
+    Serial.println(F("Calculating gyro offset, do not move MPU6050"));
+    delay(1000);
+    mpuB.setAddress(0x69);
+    mpuB.calcGyroOffsets();
+    Serial.println("Done.");
 
-  
-  
 }
 
 void loop() {
-  mpu.update();
-  mpu1.update();
-  if(millis() - timer > 1000){
-    Serial.print(F("\nACCELERO  X: "));Serial.print(mpu.getAccX());
-    X = mpu.getAccX();
-    //Serial.print("\tY: ");Serial.print(mpu.getAccY());
-    //Serial.print("\tZ: ");Serial.println(mpu.getAccZ());
+  mpuA.update();
 
-    Serial.print(F("\nACCELERO  X1: "));Serial.print(mpu1.getAccX());
-    X1 = mpu1.getAccX();
-    razlika = X - X1;
-    Serial.print(F("\nRazlika:"));Serial.print(razlika);
-   // Serial.print("\tY1: ");Serial.print(mpu1.getAccY());
-   // Serial.print("\tZ1: ");Serial.println(mpu1.getAccZ());
-  
-    /*Serial.print(F("GYRO      X: "));Serial.print(mpu.getGyroX());
-    Serial.print("\tY: ");Serial.print(mpu.getGyroY());
-    Serial.print("\tZ: ");Serial.println(mpu.getGyroZ());
+  if(millis() - timer > 1000){ // print data every second
+    Serial.print("\nZ: ");Serial.println(mpuA.getAccZ());
+    Serial.print("\nGYRO      X: ");Serial.print(mpuA.getGyroX());
+    Serial.print("\nY: ");Serial.print(mpuA.getGyroY());
+    Serial.print("\nZ: ");Serial.println(mpuA.getGyroZ());
+    Serial.println(F("=====================================================\n"));
+    timer = millis();
+  }
+   mpuB.update();
 
-    Serial.print(F("GYRO      X1: "));Serial.print(mpu1.getGyroX());
-    Serial.print("\tY1: ");Serial.print(mpu1.getGyroY());
-    Serial.print("\tZ1: ");Serial.println(mpu1.getGyroZ());
-*/
-    //Serial.println(F("=====================================================\n"));
+  if(millis() - timer > 1000){ // print data every second
+        Serial.print("\nZ: ");Serial.println(mpuB.getAccZ());
+    Serial.print("\nGYRO      X: ");Serial.print(mpuB.getGyroX());
+    Serial.print("\nY: ");Serial.print(mpuB.getGyroY());
+    Serial.print("\nZ: ");Serial.println(mpuB.getGyroZ());
+    Serial.println(F("=====================================================\n"));
     timer = millis();
   }
 
