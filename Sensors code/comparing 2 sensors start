@@ -8,52 +8,108 @@
  */
 
 #include "Wire.h"
+// #include <Adafruit_MPU6050.h>
+// #include <Adafruit_Sensor.h>
 #include <MPU6050_light.h>
+
+//Adafruit_MPU6050 mpu;
 
 MPU6050 mpuA(Wire);
 MPU6050 mpuB(Wire); 
-
 long timer = 0;
 
-void setup() {
-  Serial.begin(9600);
-  Wire.begin();
-  
-  mpuA.setAddress(0x68);
-    mpuA.begin();
-    Serial.println(F("Calculating gyro offset, do not move MPU6050"));
-    delay(1000);
-    mpuA.calcGyroOffsets();
-    Serial.println("Done.");
-  mpuB.begin();
-    Serial.println(F("Calculating gyro offset, do not move MPU6050"));
-    delay(1000);
-    mpuB.setAddress(0x69);
-    mpuB.calcGyroOffsets();
-    Serial.println("Done.");
+int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;               // Value offset
+int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   // Value from initial read
+// int AGxC, AGyC, AGzC, AAxC, AAyC, AAzC, BGxC, BGyC, BGzC, BAxC, BAyC, BAzC;   // Value after calibration
 
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  init_call();
 }
 
 void loop() {
+  read_gyro();
+  if(AGx - BGx >= 15 || AGx - BGx >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+  if(AGy - BGy >= 15 || AGy - BGy >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+    if(AGz - BGz >= 15 || AGz - BGz >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+  if(AGxI - BGxI >= 15 || AGxI - BGxI >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+  if(AGyI - BGyI >= 15 || AGyI - BGyI >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+  if(AGzI - BGzI >= 15 || AGzI - BGzI >= - 15){
+    Serial.print("\n greshno ");
+  }else{
+    Serial.print("\n pravilno ");
+  };
+  /*Serial.print("\nAGx: "); Serial.print(AGx); Serial.print("  BGx: "); Serial.print(BGx);
+  Serial.print("\nAGy: "); Serial.print(AGy); Serial.print("  BGy: "); Serial.print(BGy);
+  Serial.print("\nAGz: "); Serial.print(AGz); Serial.print("  BGz: "); Serial.print(BGz);
+  Serial.print("\n-------------------------------");
+  Serial.print("\nAGx: "); Serial.print(AGxI); Serial.print("  BGx: "); Serial.print(BGxI);
+  Serial.print("\nAGy: "); Serial.print(AGyI); Serial.print("  BGy: "); Serial.print(BGyI);
+  Serial.print("\nAGz: "); Serial.print(AGzI); Serial.print("  BGz: "); Serial.print(BGzI);
+  Serial.print("\n-------------------------------");
+  */
+  delay(5000);
+}
+
+void init_call() {
+  Serial.println(F("Calculating gyro offset."));
+  mpuA.setAddress(0x68);
+  delay(50);
+  mpuA.begin();
+  delay(50);
+  mpuA.calcOffsets();
+  delay(50);
+  mpuB.setAddress(0x69);
+  delay(50);
+  mpuB.begin();
+  delay(50);
+  mpuB.calcOffsets();
+  delay(50);
+  
+  Serial.println(F("Calculating gyro offset Done!"));
+  delay(100);
+}
+
+void read_gyro(){
   mpuA.update();
+  mpuB.update();
 
-  if(millis() - timer > 1000){ // print data every second
-    Serial.print("\nZ: ");Serial.println(mpuA.getAccZ());
-    Serial.print("\nGYRO      X: ");Serial.print(mpuA.getGyroX());
-    Serial.print("\nY: ");Serial.print(mpuA.getGyroY());
-    Serial.print("\nZ: ");Serial.println(mpuA.getGyroZ());
-    Serial.println(F("=====================================================\n"));
-    timer = millis();
-  }
-   mpuB.update();
+  AGx = mpuA.getAngleX();
+  AGy = mpuA.getAngleY();
+  AGz = mpuA.getAngleZ();
+  BGx = mpuB.getAngleX();
+  BGy = mpuB.getAngleY();
+  BGz = mpuB.getAngleZ();
+  AGz = mpuA.getAngleZ();
 
-  if(millis() - timer > 1000){ // print data every second
-        Serial.print("\nZ: ");Serial.println(mpuB.getAccZ());
-    Serial.print("\nGYRO      X: ");Serial.print(mpuB.getGyroX());
-    Serial.print("\nY: ");Serial.print(mpuB.getGyroY());
-    Serial.print("\nZ: ");Serial.println(mpuB.getGyroZ());
-    Serial.println(F("=====================================================\n"));
-    timer = millis();
-  }
+  AGxI = mpuA.getGyroX();
+  AGyI = mpuA.getGyroY();
+  AGzI = mpuA.getGyroZ();
+  BGxI = mpuB.getGyroX();
+  BGyI = mpuB.getGyroY();
+  BGzI = mpuB.getGyroZ();
+  AGzI = mpuA.getGyroZ();
 
 }
