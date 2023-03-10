@@ -1,26 +1,15 @@
-/* Get all possible data from MPU6050
- * Accelerometer values are given as multiple of the gravity [1g = 9.81 m/s²]
- * Gyro values are given in deg/s
- * Angles are given in degrees
- * Note that X and Y are tilt angles and not pitch/roll.
- *
- * License: MIT
- */
 
 #include "Wire.h"
-// #include <Adafruit_MPU6050.h>
-// #include <Adafruit_Sensor.h>
 #include <MPU6050_light.h>
-
-//Adafruit_MPU6050 mpu;
 
 MPU6050 mpuA(Wire);
 MPU6050 mpuB(Wire); 
-long timer = 0;
 
-int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;               // Value offset
-int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   // Value from initial read
-// int AGxC, AGyC, AGzC, AAxC, AAyC, AAzC, BGxC, BGyC, BGzC, BAxC, BAyC, BAzC;   // Value after calibration
+//long timer = 0;
+
+int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;               
+int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   
+float AcczA, AcczB;
 
 void setup() {
   Serial.begin(115200);
@@ -31,47 +20,55 @@ void setup() {
 
 void loop() {
   read_gyro();
-  if(AGx - BGx >= 15 || AGx - BGx >= - 15){
-    Serial.print("\n greshno ");
+
+ if ((0.96 < AcczA && AcczA < 1.04) && (0.96 < AcczB && AcczB< 1.04)){
+    Serial.print("\n starting point ");
+    Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
   }else{
-    Serial.print("\n pravilno ");
-  };
-  if(AGy - BGy >= 15 || AGy - BGy >= - 15){
-    Serial.print("\n greshno ");
-  }else{
-    Serial.print("\n pravilno ");
-  };
-    if(AGz - BGz >= 15 || AGz - BGz >= - 15){
-    Serial.print("\n greshno ");
-  }else{
-    Serial.print("\n pravilno ");
-  };
-  if(AGxI - BGxI >= 15 || AGxI - BGxI >= - 15){
-    Serial.print("\n greshno ");
-  }else{
-    Serial.print("\n pravilno ");
-  };
-  if(AGyI - BGyI >= 15 || AGyI - BGyI >= - 15){
-    Serial.print("\n greshno ");
-  }else{
-    Serial.print("\n pravilno ");
-  };
-  if(AGzI - BGzI >= 15 || AGzI - BGzI >= - 15){
-    Serial.print("\n greshno ");
-  }else{
-    Serial.print("\n pravilno ");
-  };
-  /*Serial.print("\nAGx: "); Serial.print(AGx); Serial.print("  BGx: "); Serial.print(BGx);
-  Serial.print("\nAGy: "); Serial.print(AGy); Serial.print("  BGy: "); Serial.print(BGy);
-  Serial.print("\nAGz: "); Serial.print(AGz); Serial.print("  BGz: "); Serial.print(BGz);
-  Serial.print("\n-------------------------------");
-  Serial.print("\nAGx: "); Serial.print(AGxI); Serial.print("  BGx: "); Serial.print(BGxI);
-  Serial.print("\nAGy: "); Serial.print(AGyI); Serial.print("  BGy: "); Serial.print(BGyI);
-  Serial.print("\nAGz: "); Serial.print(AGzI); Serial.print("  BGz: "); Serial.print(BGzI);
-  Serial.print("\n-------------------------------");
-  */
-  delay(5000);
-}
+    Serial.print("\n repping ");
+    Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
+  }
+
+  //Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
+
+  // if(abs(AGx) - abs(BGx) >= 4){
+  //   Serial.print("\n greshno ");
+  // }else{
+  //   if(abs(AGy) - abs(BGy) >= 2){
+  //     Serial.print("\n greshno ");
+  //   }else{
+  //     if(abs(AGz) - abs(BGz) >= 25){
+  //       Serial.print("\n greshno ");
+  //     }else{
+  //       if(abs(AGxI) - abs(BGxI) >= 1){
+  //         Serial.print("\n greshno ");
+  //       }else{
+  //         if(abs(AGyI) - abs(BGyI) >= 1){
+  //         Serial.print("\n greshno ");
+  //         }else{
+  //           if(abs(AGzI) - abs(BGzI) >= 1){
+  //             Serial.print("\n greshno ");
+  //           }else{
+  //             Serial.print("\n pravilno ");
+  //           };
+  //         };
+  //       };
+  //     };
+  //   };
+  // };
+  
+  // Serial.print("\nAGx: "); Serial.print(abs(AGx)); Serial.print("  BGx: "); Serial.print(abs(BGx));
+  // Serial.print("\nAGy: "); Serial.print(AGy); Serial.print("  BGy: "); Serial.print(BGy);
+  // Serial.print("\nAGz: "); Serial.print(AGz); Serial.print("  BGz: "); Serial.print(BGz);
+  // Serial.print("\n-------------------------------");
+  // Serial.print("\nAGxI: "); Serial.print(AGxI); Serial.print("  BGxI: "); Serial.print(BGxI);
+  // Serial.print("\nAGyI: "); Serial.print(AGyI); Serial.print("  BGyI: "); Serial.print(BGyI);
+  // Serial.print("\nAGzI: "); Serial.print(AGzI); Serial.print("  BGzI: "); Serial.print(BGzI);
+  // Serial.print("\n-------------------------------");
+  
+  delay(1500);
+ }
+
 
 void init_call() {
   Serial.println(F("Calculating gyro offset."));
@@ -96,6 +93,9 @@ void read_gyro(){
   mpuA.update();
   mpuB.update();
 
+  AcczA = mpuA.getAccZ();
+  AcczB = mpuB.getAccZ();
+  
   AGx = mpuA.getAngleX();
   AGy = mpuA.getAngleY();
   AGz = mpuA.getAngleZ();
@@ -103,7 +103,7 @@ void read_gyro(){
   BGy = mpuB.getAngleY();
   BGz = mpuB.getAngleZ();
   AGz = mpuA.getAngleZ();
-
+  
   AGxI = mpuA.getGyroX();
   AGyI = mpuA.getGyroY();
   AGzI = mpuA.getGyroZ();
