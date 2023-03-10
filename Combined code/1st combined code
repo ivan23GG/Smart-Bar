@@ -1,0 +1,80 @@
+#include <UTFT.h>
+#include <URTouch.h>
+
+struct RxStruct {
+    char textB[16];        
+    int valC;               
+    unsigned long valD;                                                      
+};
+RxStruct rxData;
+bool newData = false;
+const byte startMarker = 255;
+const byte rxDataLen = sizeof(rxData);
+
+UTFT    myGLCD(ILI9486,38,39,40,41);
+URTouch  myTouch( 6, 5, 4, 3, 2);
+
+extern uint8_t BigFont[];
+
+void setup()
+{
+  myGLCD.InitLCD();
+  myGLCD.clrScr();
+  myTouch.setPrecision(PREC_MEDIUM);
+  myGLCD.setFont(BigFont);
+  myGLCD.setBackColor(0, 0, 0);
+  Serial.begin(9600);
+  Serial.println("\nStarting SerialStructReceive.ino\n");
+  Serial1.begin(9600);
+  pinMode(7, OUTPUT);
+}
+
+void loop(){
+   recvStructWithKnownLength();
+    if (newData == true) {
+        showNewData();
+        newData = false;
+    }
+}
+
+void showNewData() {
+    Serial.print("This just in    ");
+    Serial.print(rxData.textB);
+    if(rxData.textB=="SendA");
+    {
+      digitalWrite(7, HIGH);
+      delay(300);
+      digitalWrite(7, LOW);
+      delay(300);
+      
+    }
+    
+    myGLCD.print(rxData.textB, 10, 0);
+    Serial.print(' ');
+    Serial.print(rxData.valC);
+    Serial.print(' ');
+    myGLCD.print(String(rxData.valC), 10, 30);
+    Serial.println(rxData.valD);
+    myGLCD.print(String(rxData.valD), 10, 60);
+
+}
+
+void recvStructWithKnownLength() {
+    static byte recvData[rxDataLen];
+    byte rb;
+    byte * structStart;
+    structStart = reinterpret_cast <byte *> (&rxData);
+    if (Serial1.available() >= rxDataLen + 1 and newData == false) {
+        rb = Serial1.read();
+        if (rb == startMarker) {    
+            for (byte n = 0; n < rxDataLen; n++) {
+                *(structStart + n) = Serial1.read();
+            }  
+            while (Serial1.available() > 0) {
+                byte dumpTheData = Serial1.read();
+            }
+            newData = true;
+        }
+    }
+}
+
