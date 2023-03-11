@@ -1,4 +1,3 @@
-
 #include "Wire.h"
 #include <MPU6050_light.h>
 
@@ -11,7 +10,7 @@ int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;
 int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   
 float AcczA, AcczB;
 
-int prov = 0, provGresh = 0, rep = 0, br = 0, clean = 5;
+int prov = 0, provGresh = 0, rep = 0, br = 1, clean = 5;
 
 void setup() {
   Serial.begin(115200);
@@ -37,6 +36,7 @@ void loop() {
       //Serial.print(provGresh);Serial.print(" ");Serial.print(prov);
     }else{
       delay(50);
+      //Serial.print("\nlolo\n "); Serial.print(prov);Serial.print("\n");Serial.print(br);
       if(prov != 0 && br == 1){
         Serial.print("\nSSS ");
         clean = 1;
@@ -52,6 +52,9 @@ void loop() {
   
   }else{
     prov ++; 
+    if(AcczA > 1.46 && AcczB > 1.46){ 
+      br = 1;
+    }
     if(abs(AGx) - abs(BGx) >= 20){
       //Serial.print("\n greshnoX ");
       provGresh ++;      
@@ -60,26 +63,23 @@ void loop() {
           //Serial.print("\n greshnoY ");
           provGresh ++;
         }else{
-          if(abs(AGz) - abs(BGz) >= 8){
+          if(abs(AGz) - abs(BGz) >= 7){
             //Serial.print("\n greshnoZ ");
             provGresh ++;
           }else{
-            if(abs(AGxI) - abs(BGxI) >= 8){
+            if(abs(AGxI) - abs(BGxI) >= 7){
               //Serial.print("\n greshnoXI ");
               provGresh ++;
             }else{
-              if(abs(AGyI) - abs(BGyI) >= 8){
+              if(abs(AGyI) - abs(BGyI) >= 7){
               //Serial.print("\n greshnoYI ");
               provGresh ++;
               }else{
-                if(abs(AGzI) - abs(BGzI) >= 6){
+                if(abs(AGzI) - abs(BGzI) >= 5){
                   //Serial.print("\n greshnoZI ");
                   provGresh ++;
                 }
                 //else{
-                  if(AcczA > 1.46 && AcczB > 1.46){ 
-                  br = 1;
-                }
                 //};
               };
             };
