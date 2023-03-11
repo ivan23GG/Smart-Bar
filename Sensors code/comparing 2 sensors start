@@ -11,6 +11,8 @@ int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;
 int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   
 float AcczA, AcczB;
 
+int prov = 0, provGresh = 0, rep = 0, br = 0, clean = 5;
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -20,14 +22,71 @@ void setup() {
 
 void loop() {
   read_gyro();
-
- if ((0.96 < AcczA && AcczA < 1.04) && (0.96 < AcczB && AcczB< 1.04)){
-    Serial.print("\n starting point ");
-    Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
+  delay(50);
+// Serial.print(AcczA);Serial.print("\n");Serial.print(AcczB);Serial.print("\n");
+ if ((0.9 < AcczA && AcczA < 1.1) && (0.9 < AcczB && AcczB< 1.1)){
+    delay(50);
+    if (provGresh*5 > prov && br == 1){
+      if(prov != 0){
+        Serial.print("\nN ");
+        br = 0;
+        clean = 0;
+        //tuka prati samo che ne e bilo chisto ne pishi za koe povtorenie e, tuk izprati kum lorata
+        delay(50);
+      }
+      //Serial.print(provGresh);Serial.print(" ");Serial.print(prov);
+    }else{
+      delay(50);
+      if(prov != 0 && br == 1){
+        Serial.print("\nSSS ");
+        clean = 1;
+        rep++;
+        Serial.print(rep);
+        br = 0;
+        //rep e povtorenieto clean e dali e chisto ili ne, tuk izprati kum lorata
+        delay(50);
+      }
+    }
+    provGresh = 0;
+    prov = 0;
+  
   }else{
-    Serial.print("\n repping ");
-    Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
-  }
+    prov ++; 
+    if(abs(AGx) - abs(BGx) >= 20){
+      //Serial.print("\n greshnoX ");
+      provGresh ++;      
+      }else{       
+        if(abs(AGy) - abs(BGy) >= 20){
+          //Serial.print("\n greshnoY ");
+          provGresh ++;
+        }else{
+          if(abs(AGz) - abs(BGz) >= 8){
+            //Serial.print("\n greshnoZ ");
+            provGresh ++;
+          }else{
+            if(abs(AGxI) - abs(BGxI) >= 8){
+              //Serial.print("\n greshnoXI ");
+              provGresh ++;
+            }else{
+              if(abs(AGyI) - abs(BGyI) >= 8){
+              //Serial.print("\n greshnoYI ");
+              provGresh ++;
+              }else{
+                if(abs(AGzI) - abs(BGzI) >= 6){
+                  //Serial.print("\n greshnoZI ");
+                  provGresh ++;
+                }
+                //else{
+                  if(AcczA > 1.46 && AcczB > 1.46){ 
+                  br = 1;
+                }
+                //};
+              };
+            };
+          };
+        };
+      };
+  };
 
   //Serial.print("\nAcczA: "); Serial.print(AcczA); Serial.print("  AcczB: "); Serial.print(AcczB);
 
@@ -65,8 +124,7 @@ void loop() {
   // Serial.print("\nAGyI: "); Serial.print(AGyI); Serial.print("  BGyI: "); Serial.print(BGyI);
   // Serial.print("\nAGzI: "); Serial.print(AGzI); Serial.print("  BGzI: "); Serial.print(BGzI);
   // Serial.print("\n-------------------------------");
-  
-  delay(1500);
+
  }
 
 
