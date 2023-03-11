@@ -1,36 +1,115 @@
 #include <SoftwareSerial.h>
+#include "Wire.h"
+#include <MPU6050_light.h>
+
+MPU6050 mpuA(Wire);
+MPU6050 mpuB(Wire); 
 SoftwareSerial sendSerial(6,7);
+int AGx, AGy, AGz, AAx, AAy, AAz, BGx, BGy, BGz, BAx, BAy, BAz;               
+int AGxI, AGyI, AGzI, AAxI, AAyI, AAzI, BGxI, BGyI, BGzI, BAxI, BAyI, BAzI;   
+float AcczA, AcczB;
+int prov = 0, provGresh = 0, rep = 0, br = 1, clean = 5;
 struct TxStruct {
-    char textA[16];        
-    int valA;               
-    unsigned long valB;                                    
+    char form;        
+    int count;                                                   
 };
-TxStruct txData = {"xxx", 235, 0};
+TxStruct txData = {"x", 0};
 bool newTxData = false;
 const byte startMarker = 255;
 const byte txDataLen = sizeof(txData);
 unsigned long prevUpdateTime = 0;
 unsigned long updateInterval = 500;
 void setup() {
-    Serial.begin(9600);
+    Wire.begin();
+    
+    Serial.begin(115000);
     Serial.println("\nStarting SerialStructSend.ino\n");
     sendSerial.begin(9600);
+    init_call();
 }
 void loop() {
-    updateDataToSend();
+  read_gyro();
+  delay(50);
+// Serial.print(AcczA);Serial.print("\n");Serial.print(AcczB);Serial.print("\n");
+ if ((0.9 < AcczA && AcczA < 1.1) && (0.9 < AcczB && AcczB< 1.1)){
+    delay(50);
+    if (provGresh*5 > prov && br == 1){
+      if(prov != 0){
+        Serial.print("\nN ");
+        br = 0;
+        clean = 0;
+        rep++;
+        delay(50);
+      }
+      //Serial.print(provGresh);Serial.print(" ");Serial.print(prov);
+    }else{
+      delay(50);
+      //Serial.print("\nlolo\n "); Serial.print(prov);Serial.print("\n");Serial.print(br);
+      if(prov != 0 && br == 1){
+        Serial.print("\nSSS ");
+        clean = 1;
+        rep++;
+        Serial.print(rep);
+        br = 0;
+        delay(50);
+      }
+    }
+    provGresh = 0;
+    prov = 0;
+  
+ } 
+else{
+    prov ++; 
+    if(AcczA > 1.46 && AcczB > 1.46){ 
+      br = 1;
+    }
+    if(abs(AGx) - abs(BGx) >= 20){
+      //Serial.print("\n greshnoX ");
+      provGresh ++;      
+      }else{       
+        if(abs(AGy) - abs(BGy) >= 20){
+          //Serial.print("\n greshnoY ");
+          provGresh ++;
+        }else{
+          if(abs(AGz) - abs(BGz) >= 7){
+            //Serial.print("\n greshnoZ ");
+            provGresh ++;
+          }else{
+            if(abs(AGxI) - abs(BGxI) >= 7){
+              //Serial.print("\n greshnoXI ");
+              provGresh ++;
+            }else{
+              if(abs(AGyI) - abs(BGyI) >= 7){
+              //Serial.print("\n greshnoYI ");
+              provGresh ++;
+              }else{
+                if(abs(AGzI) - abs(BGzI) >= 5){
+                  //Serial.print("\n greshnoZI ");
+                  provGresh ++;
+                }
+   
+          }
+   
+            }
+          }
+        }
+      }
+}
+ updateDataToSend();
     transmitData();
 }
 void updateDataToSend() {
     if (millis() - prevUpdateTime >= updateInterval) {
         prevUpdateTime = millis();
-        if (newTxData == false) { 
-            char sText[] = "SendA";
-            strcpy(txData.textA, sText);
-            txData.valA += 10;
-            if (txData.valA > 300) {
-                txData.valA = 235;
-            }
-            txData.valB = millis();
+        if (newTxData == false) {
+          if(clean==1){
+            txData.form='C';
+          }
+          else
+          {
+            txData.form='I';
+          }
+          txData.count=rep;
             newTxData = true;
         }
     }
@@ -40,11 +119,51 @@ void transmitData() {
         sendSerial.write(startMarker);
         sendSerial.write((byte*) &txData, txDataLen);
         Serial.print("Sent ");
-        Serial.print(txData.textA);
+        Serial.print(txData.count);
         Serial.print(' ');
-        Serial.print(txData.valA);
+        Serial.print(txData.form);
         Serial.print(' ');
-        Serial.println(txData.valB);
+       
         newTxData = false;
     }
+}
+void init_call() {
+  Serial.println(F("Calculating gyro offset."));
+  mpuA.setAddress(0x68);
+  delay(50);
+  mpuA.begin();
+  delay(50);
+  mpuA.calcOffsets();
+  delay(50);
+  mpuB.setAddress(0x69);
+  delay(50);
+  mpuB.begin();
+  delay(50);
+  mpuB.calcOffsets();
+  delay(50);
+  
+  Serial.println(F("Calculating gyro offset Done!"));
+  delay(100);
+}
+void read_gyro()
+{
+  mpuA.update();
+  mpuB.update();
+  AcczA = mpuA.getAccZ();
+  AcczB = mpuB.getAccZ();  
+  AGx = mpuA.getAngleX();
+  AGy = mpuA.getAngleY();
+  AGz = mpuA.getAngleZ();
+  BGx = mpuB.getAngleX();
+  BGy = mpuB.getAngleY();
+  BGz = mpuB.getAngleZ();
+  AGz = mpuA.getAngleZ(); 
+  AGxI = mpuA.getGyroX();
+  AGyI = mpuA.getGyroY();
+  AGzI = mpuA.getGyroZ();
+  BGxI = mpuB.getGyroX();
+  BGyI = mpuB.getGyroY();
+  BGzI = mpuB.getGyroZ();
+  AGzI = mpuA.getGyroZ();
+
 }
